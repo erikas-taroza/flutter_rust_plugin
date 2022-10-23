@@ -12,7 +12,7 @@ main {
 
 -- Init Linux --
 linux -> CMakeLists.txt at the bottom:
-set(CRATE_NAME, "folder-name-with-dylib")
+set(CRATE_NAME, "pkgname")
 set(CRATE_NAME ${CRATE_NAME} PARENT_SCOPE)
 add_subdirectory(${CRATE_NAME})
 # ...
