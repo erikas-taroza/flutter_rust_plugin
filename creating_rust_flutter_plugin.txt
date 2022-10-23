@@ -1,8 +1,8 @@
 -- Write Rust impl --
-cargo new name --lib
+cargo new pkgname --lib
 
 -- Init flutter plugin project --
-flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift id3tags
+flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname
 
 -- Init Android --
 android -> build.gradle in sourceSets:
@@ -16,18 +16,18 @@ set(CRATE_NAME, "folder-name-with-dylib")
 set(CRATE_NAME ${CRATE_NAME} PARENT_SCOPE)
 add_subdirectory(${CRATE_NAME})
 # ...
-set(id3tags_bundled_libraries
+set(pkgname_bundled_libraries
     "$<TARGET_FILE:${CRATE_NAME}>"
     ...
 
 -- Init macOS and iOS --
-macos/ios -> id3tags.podspec:
+macos/ios -> pkgname.podspec:
 s.vendored_libraries = 'Libs/**/*'
 
 -- Init Windows --
 windows -> CMakeLists.txt:
-set(id3tags_bundled_libraries
-    "${CMAKE_CURRENT_SOURCE_DIR}/name.dll"
+set(pkgname_bundled_libraries
+    "${CMAKE_CURRENT_SOURCE_DIR}/pkgname.dll"
     ...
 
 -- Rust Code --
@@ -53,13 +53,13 @@ cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./android/src/main/jni
 -- Export Linux Lib --
 rustup target add x86_64-unknown-linux-gnu
 cargo build --release --target x86_64-unknown-linux-gnu
-Move the exported file to ./linux/name
+Move the exported file to ./linux/pkgname
 
 -- Export macOS Libs --
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 cargo build --release --target aarch64-apple-darwin
 cargo build --release --target x86_64-apple-darwin
-lipo "target/aarch64-apple-darwin/release/name.dylib" "target/x86_64-apple-darwin/release/name.dylib" -output "name.dylib" -create
+lipo "target/aarch64-apple-darwin/release/pkgname.dylib" "target/x86_64-apple-darwin/release/pkgname.dylib" -output "pkgname.dylib" -create
 Move the exported file to ./macos/Libs
 
 -- Export iOS Libs --
@@ -67,7 +67,7 @@ rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
 cargo build --release --target aarch64-apple-ios
 cargo build --release --target aarch64-apple-ios-sim
 cargo build --release --target x86_64-apple-ios
-lipo "target/aarch64-apple-ios-sim/release/name.a" "target/x86_64-apple-ios/release/name.a" -output "name.a" -create
+lipo "target/aarch64-apple-ios-sim/release/pkgname.a" "target/x86_64-apple-ios/release/pkgname.a" -output "pkgname.a" -create
 
 -- Export Windows Libs --
 rustup target add x86_64-pc-windows-msvc
