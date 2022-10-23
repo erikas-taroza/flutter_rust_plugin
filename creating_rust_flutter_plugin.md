@@ -1,8 +1,14 @@
-## Write Rust impl
-cargo new pkgname --lib
+## Init Flutter plugin project
+``flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname``
 
-## Init flutter plugin project
-flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname
+## Write Rust impl
+``cargo new pkgname --lib``
+- Add to a folder in root dir of plugin project.
+- Update Cargo.toml:
+```toml
+[lib]
+crate-type = ["staticlib", "cdylib"]
+```
 
 ### Init Android
 android -> build.gradle:
@@ -41,14 +47,6 @@ set(pkgname_bundled_libraries
     ...
 ```
 
-## Rust Code
-Add to a folder in root dir.
-Update Cargo.toml:
-```toml
-[lib]
-crate-type = ["staticlib", "cdylib"]
-```
-
 ## Flutter->Rust Codegen
 ```
 flutter_rust_bridge_codegen \
@@ -68,9 +66,11 @@ cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./android/src/main/jni
 ```
 
 ## Export Linux Lib
+```
 rustup target add x86_64-unknown-linux-gnu
 cargo build --release --target x86_64-unknown-linux-gnu
 Move the exported file to ./linux/pkgname
+```
 
 ## Export macOS Libs
 ```
