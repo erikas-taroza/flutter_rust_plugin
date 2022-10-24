@@ -69,8 +69,8 @@ cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./android/src/main/jni
 ```
 rustup target add x86_64-unknown-linux-gnu
 cargo build --release --target x86_64-unknown-linux-gnu
-Move the exported file to ./linux/pkgname
 ```
+Move the exported file to ./linux/pkgname
 
 ## Export macOS Libs
 ```
