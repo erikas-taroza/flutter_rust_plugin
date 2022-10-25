@@ -56,12 +56,14 @@ set(pkgname_bundled_libraries
 ```
 flutter_rust_bridge_codegen \
     --rust-input rust/src/api.rs \
-    --dart-output lib/bridge_generated.dart \
+    --dart-output lib/src/bridge_generated.dart \
     --c-output ios/Runner/bridge_generated.h \
     --c-output macos/Runner/bridge_generated.h \
-    --dart-decl-output lib/bridge_definitions.dart
+    --dart-decl-output lib/src/bridge_definitions.dart
 ```
 - Fix any errors.
+- Move everything in the folder to a subfolder called ``src``
+- Add [this file](https://raw.githubusercontent.com/Desdaemon/flutter_rust_bridge_template/main/lib/ffi.dart) to lib/src
 - Create API for users.
 
 ## Export Android Libs
