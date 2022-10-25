@@ -35,7 +35,7 @@ set(pkgname_bundled_libraries
 linux -> pkgname -> CMakeLists.txt:
 ```cmake
 add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)
-set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/pkgname.so")
+set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")
 ```
 
 ### Init macOS and iOS
@@ -82,7 +82,7 @@ Move the exported file to ./linux/pkgname
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 cargo build --release --target aarch64-apple-darwin
 cargo build --release --target x86_64-apple-darwin
-lipo "target/aarch64-apple-darwin/release/pkgname.dylib" "target/x86_64-apple-darwin/release/pkgname.dylib" -output "pkgname.dylib" -create
+lipo "target/aarch64-apple-darwin/release/libpkgname.dylib" "target/x86_64-apple-darwin/release/libpkgname.dylib" -output "libpkgname.dylib" -create
 ```
 Move the exported file to ./macos/Libs
 
@@ -92,7 +92,7 @@ rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
 cargo build --release --target aarch64-apple-ios
 cargo build --release --target aarch64-apple-ios-sim
 cargo build --release --target x86_64-apple-ios
-lipo "target/aarch64-apple-ios-sim/release/pkgname.a" "target/x86_64-apple-ios/release/pkgname.a" -output "pkgname.a" -create
+lipo "target/aarch64-apple-ios-sim/release/libpkgname.a" "target/x86_64-apple-ios/release/libpkgname.a" -output "libpkgname.a" -create
 ```
 Move the export file to ./ios/Libs
 
