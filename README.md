@@ -32,6 +32,11 @@ set(pkgname_bundled_libraries
     "$<TARGET_FILE:${CRATE_NAME}>"
     ...
 ```
+linux -> pkgname -> CMakeLists.txt:
+```cmake
+add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)
+set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/pkgname.so")
+```
 
 ### Init macOS and iOS
 macos/ios -> pkgname.podspec:
