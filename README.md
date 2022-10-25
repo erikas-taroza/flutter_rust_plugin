@@ -55,10 +55,11 @@ set(pkgname_bundled_libraries
 ## Flutter->Rust Codegen
 ```
 flutter_rust_bridge_codegen \
-    --rust-input native/src/api.rs \
+    --rust-input rust/src/api.rs \
     --dart-output lib/bridge_generated.dart \
     --c-output ios/Runner/bridge_generated.h \
-    --c-output macos/Runner/bridge_generated.h
+    --c-output macos/Runner/bridge_generated.h \
+    --dart-decl-output lib/bridge_definitions.dart
 ```
 - Fix any errors.
 - Create API for users.
