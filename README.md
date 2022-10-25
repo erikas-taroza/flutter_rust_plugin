@@ -1,8 +1,12 @@
 ## Init Flutter plugin project
-``flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname``
+```
+flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname
+```
 
 ## Write Rust impl
-``cargo new pkgname --lib``
+```
+cargo new pkgname --lib
+```
 - Add to a folder in root dir of plugin project.
 - Update Cargo.toml:
 ```toml
@@ -65,6 +69,11 @@ flutter_rust_bridge_codegen \
 - Move everything in the folder to a subfolder called ``src``
 - Add [this file](https://raw.githubusercontent.com/Desdaemon/flutter_rust_bridge_template/main/lib/ffi.dart) to lib/src
 - Create API for users.
+
+**NOTE:** If codegen fails with incorrect signatures, try this:
+```sh 
+export CPATH="$(clang -v 2>&1 | grep "Selected GCC installation" | rev | cut -d' ' -f1 | rev)/include"
+```
 
 ## Export Android Libs
 ```
