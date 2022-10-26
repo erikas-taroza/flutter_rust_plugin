@@ -2,6 +2,17 @@
 ```
 flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname
 ```
+Update **pubspec.yaml**:
+```yaml
+dependencies:
+  ...
+  ffi: ^2.0.1
+  flutter_rust_bridge: ^1.49.0
+...
+dev_dependencies:
+  ...
+  ffigen: ^6.1.2
+```
 
 ## Write Rust impl
 ```
