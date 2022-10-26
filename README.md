@@ -76,6 +76,18 @@ flutter_rust_bridge_codegen \
     --c-output macos/Runner/bridge_generated.h \
     --dart-decl-output lib/src/bridge_definitions.dart
 ```
+ios/Classes -> pkgnamePlugin.m:
+```objc
+...
+#import "../Runner/bridge_generated.h"
+...
+@implementation Id3tagsPlugin
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+  dummy_method_to_enforce_bundling(); // <--- Insert this to prevent stripping.
+  [SwiftId3tagsPlugin registerWithRegistrar:registrar];
+}
+@end
+```
 - Fix any errors.
 - Move everything in the folder to a subfolder called ``src``
 - Add [this file](https://raw.githubusercontent.com/Desdaemon/flutter_rust_bridge_template/main/lib/ffi.dart) to lib/src
