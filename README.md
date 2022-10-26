@@ -81,10 +81,10 @@ ios/Classes -> pkgnamePlugin.m:
 ...
 #import "../Runner/bridge_generated.h"
 ...
-@implementation Id3tagsPlugin
+@implementation pkgnamePlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   dummy_method_to_enforce_bundling(); // <--- Insert this to prevent stripping.
-  [SwiftId3tagsPlugin registerWithRegistrar:registrar];
+  [SwiftpkgnamePlugin registerWithRegistrar:registrar];
 }
 @end
 ```
