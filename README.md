@@ -102,7 +102,7 @@ export CPATH="$(clang -v 2>&1 | grep "Selected GCC installation" | rev | cut -d'
 ```
 rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 cargo install cargo-ndk
-cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./android/src/main/jniLibs
+cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ../android/src/main/jniLibs build --release
 ```
 
 ## Export Linux Lib
