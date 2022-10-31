@@ -30,9 +30,7 @@ android -> build.gradle:
 ```gradle
 sourceSets {
     ...
-    main {
-        jniLibs.srcDirs = ['src/main/jniLibs']
-    }
+    main.jniLibs.srcDirs = ['src/main/jniLibs']
 }
 ```
 
