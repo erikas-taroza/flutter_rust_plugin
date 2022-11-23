@@ -168,11 +168,13 @@ Here are issues that I ran into, with solutions that may help you:
 ### OpenSSL
 I had trouble building this dependency on a few platforms.
 
+Clone [openssl](https://github.com/openssl/openssl) and run the ``Configure`` script.
+
 In your ``Cargo.toml``, add an ``openssl-sys`` dependency with the ``vendored`` feature.
 
 - **Linux:** Install ``Perl`` and ``Perl CPAN``
 - **Windows:** Install ``Strawberry Perl``
-- **iOS:** The ``vendored`` feature does not work on the ``aarch64-apple-ios-sim`` target, so you need to use these environment variables when building. The ``OPENSSL_INCLUDE_DIR`` points to the ``include`` folder in the [openssl](https://github.com/openssl/openssl) source, so update this to wherever you cloned it.
+- **iOS:** The ``vendored`` feature does not work on the ``aarch64-apple-ios-sim`` target, so you need to use these environment variables when building. The ``OPENSSL_INCLUDE_DIR`` points to the ``include`` folder in the ``openssl`` source, so update this to wherever you cloned it.
   - OPENSSL_STATIC=1
   - OPENSSL_LIB_DIR=/usr/local/lib
   - OPENSSL_INCLUDE_DIR=~/Downloads/openssl/include
