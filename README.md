@@ -168,8 +168,6 @@ Here are issues that I ran into, with solutions that may help you:
 ### OpenSSL
 I had trouble building this dependency on a few platforms.
 
-Clone [openssl](https://github.com/openssl/openssl) and run the ``Configure`` script.
-
 In your ``Cargo.toml``, add an ``openssl-sys`` dependency with the ``vendored`` feature.
 
 - **Linux:** Install ``Perl`` and ``Perl CPAN``
@@ -179,3 +177,5 @@ In your ``Cargo.toml``, add an ``openssl-sys`` dependency with the ``vendored`` 
   - OPENSSL_LIB_DIR=/usr/local/lib
   - OPENSSL_INCLUDE_DIR=~/Downloads/openssl/include
   - OPENSSL_NO_VENDOR=1
+
+Clone [openssl](https://github.com/openssl/openssl) and run the ``Configure`` script.
