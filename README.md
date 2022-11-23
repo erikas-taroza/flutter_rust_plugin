@@ -1,6 +1,6 @@
 ## Init Flutter plugin project
 ```
-flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.erikas -a kotlin -i swift pkgname
+flutter create --template=plugin --platform=android,ios,linux,macos,windows --org com.pkgorg -a kotlin -i swift pkgname
 ```
 Update **pubspec.yaml**:
 ```yaml
@@ -99,13 +99,19 @@ export CPATH="$(clang -v 2>&1 | grep "Selected GCC installation" | rev | cut -d'
 ## Export Android Libs
 ```
 rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+```
+```
 cargo install cargo-ndk
+```
+```
 cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ../android/src/main/jniLibs build --release
 ```
 
 ## Export Linux Lib
 ```
 rustup target add x86_64-unknown-linux-gnu
+```
+```
 cargo build --release --target x86_64-unknown-linux-gnu
 ```
 Move the exported file to ./linux/pkgname
@@ -113,8 +119,14 @@ Move the exported file to ./linux/pkgname
 ## Export macOS Libs
 ```
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
+```
+```
 cargo build --release --target aarch64-apple-darwin
+```
+```
 cargo build --release --target x86_64-apple-darwin
+```
+```
 lipo "target/aarch64-apple-darwin/release/libpkgname.dylib" "target/x86_64-apple-darwin/release/libpkgname.dylib" -output "libpkgname.dylib" -create
 ```
 Move the exported file to ./macos/Libs
@@ -122,9 +134,17 @@ Move the exported file to ./macos/Libs
 ## Export iOS Libs
 ```
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+```
+```
 cargo build --release --target aarch64-apple-ios
+```
+```
 cargo build --release --target aarch64-apple-ios-sim
+```
+```
 cargo build --release --target x86_64-apple-ios
+```
+```
 lipo "target/aarch64-apple-ios-sim/release/libpkgname.a" "target/x86_64-apple-ios/release/libpkgname.a" -output "libpkgname.a" -create
 ```
 Move the export file to ./ios/Libs
@@ -132,6 +152,8 @@ Move the export file to ./ios/Libs
 ## Export Windows Libs
 ```
 rustup target add x86_64-pc-windows-msvc
+```
+```
 cargo build --release --target x86_64-pc-windows-msvc
 ```
 Move the exported file to ./windows
