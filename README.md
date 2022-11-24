@@ -5,12 +5,12 @@ flutter create --template=plugin --platform=android,ios,linux,macos,windows --or
 Update **pubspec.yaml**:
 ```yaml
 dependencies:
-  ...
+  # ...
   ffi: ^2.0.1
   flutter_rust_bridge: ^1.49.0
-...
+# ...
 dev_dependencies:
-  ...
+  # ...
   ffigen: ^6.1.2
 ```
 
@@ -26,16 +26,16 @@ crate-type = ["staticlib", "cdylib"]
 ```
 
 ### Init Android
-android -> build.gradle:
+``android/build.gradle``:
 ```gradle
 sourceSets {
-    ...
+    // ...
     main.jniLibs.srcDirs = ['src/main/jniLibs']
 }
 ```
 
 ### Init Linux
-linux -> CMakeLists.txt at the bottom:
+``linux/CMakeLists.txt`` at the bottom:
 ```cmake
 set(CRATE_NAME, "pkgname")
 set(CRATE_NAME ${CRATE_NAME} PARENT_SCOPE)
@@ -43,9 +43,9 @@ add_subdirectory(${CRATE_NAME})
 # ...
 set(pkgname_bundled_libraries
     "$<TARGET_FILE:${CRATE_NAME}>"
-    ...
+    # ...
 ```
-linux -> pkgname -> CMakeLists.txt:
+``linux/pkgname/CMakeLists.txt``:
 ```cmake
 add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)
 set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")
@@ -93,11 +93,11 @@ public static func register(with registrar: FlutterPluginRegistrar) {
 ```
 
 ### Init Windows
-windows -> CMakeLists.txt:
+``windows/CMakeLists.txt``:
 ```cmake
 set(pkgname_bundled_libraries
     "${CMAKE_CURRENT_SOURCE_DIR}/pkgname.dll"
-    ...
+    # ...
 ```
 
 ## Flutter->Rust Codegen
@@ -137,7 +137,7 @@ rustup target add x86_64-unknown-linux-gnu
 ```
 cargo build --release --target x86_64-unknown-linux-gnu
 ```
-Move the exported file to ./linux/pkgname
+Move the exported file to ``./linux/pkgname``
 
 ## Export macOS Libs
 ```
@@ -152,7 +152,7 @@ cargo build --release --target x86_64-apple-darwin
 ```
 lipo "target/aarch64-apple-darwin/release/libpkgname.dylib" "target/x86_64-apple-darwin/release/libpkgname.dylib" -output "libpkgname.dylib" -create
 ```
-Move the exported file to ./macos/Libs
+Move the exported file to ``./macos/Libs``
 
 ## Export iOS Libs
 ```
@@ -170,7 +170,7 @@ cargo build --release --target x86_64-apple-ios
 ```
 lipo "target/aarch64-apple-ios-sim/release/libpkgname.a" "target/x86_64-apple-ios/release/libpkgname.a" -output "libpkgname.a" -create
 ```
-Move the export file to ./ios/Libs
+Move the export file to ``./ios/Libs``
 
 ## Export Windows Libs
 ```
@@ -179,7 +179,7 @@ rustup target add x86_64-pc-windows-msvc
 ```
 cargo build --release --target x86_64-pc-windows-msvc
 ```
-Move the exported file to ./windows
+Move the exported file to ``./windows``
 
 ## Updating the project
 - Run code gen above.
