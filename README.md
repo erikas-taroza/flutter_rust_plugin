@@ -51,10 +51,45 @@ add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)
 set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")
 ```
 
-### Init macOS and iOS
-macos/ios -> pkgname.podspec:
+### Init macOS
+``macos/pkgname.podspec``:
 ```podspec
 s.vendored_libraries = 'Libs/**/*'
+```
+
+### Init iOS
+``ios/pkgname.podspec``:
+```podspec
+s.vendored_libraries = 'Libs/**/*'
+# Or alternatively:
+# s.vendored_frameworks = 'Frameworks/**/*.xcframework'
+s.static_framework = true # This allows us to use the static library we built.
+# I don't know what this does yet.
+# If you have issues, you can try adding this.
+# s.public_header_files = 'Classes/**/*.h'
+```
+
+**IMPORTANT:** XCode strips the code from the library so you need to make sure it bundles.
+
+Objective-C: ``ios/Classes/pkgnamePlugin.m``
+```objc
+...
+#import "../Runner/bridge_generated.h"
+...
+@implementation pkgnamePlugin
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+  dummy_method_to_enforce_bundling(); // <--- Insert this to prevent stripping.
+  [SwiftpkgnamePlugin registerWithRegistrar:registrar];
+}
+@end
+```
+
+Swift: ``ios/Classes/SwiftpkgnamePlugin.swift``
+```swift
+public static func register(with registrar: FlutterPluginRegistrar) {
+    // ...
+    dummy_method_to_enforce_bundling()
+}
 ```
 
 ### Init Windows
@@ -70,21 +105,9 @@ set(pkgname_bundled_libraries
 flutter_rust_bridge_codegen \
     --rust-input rust/src/api.rs \
     --dart-output lib/src/bridge_generated.dart \
-    --c-output ios/Runner/bridge_generated.h \
+    --c-output ios/Classes/bridge_generated.h \
     --c-output macos/Runner/bridge_generated.h \
     --dart-decl-output lib/src/bridge_definitions.dart
-```
-ios/Classes -> pkgnamePlugin.m:
-```objc
-...
-#import "../Runner/bridge_generated.h"
-...
-@implementation pkgnamePlugin
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  dummy_method_to_enforce_bundling(); // <--- Insert this to prevent stripping.
-  [SwiftpkgnamePlugin registerWithRegistrar:registrar];
-}
-@end
 ```
 - Fix any errors.
 - Move everything in the folder to a subfolder called ``src``
@@ -179,3 +202,9 @@ In your ``Cargo.toml``, add an ``openssl-sys`` dependency with the ``vendored`` 
   - OPENSSL_NO_VENDOR=1
 
 Clone [openssl](https://github.com/openssl/openssl) and run the ``Configure`` script.
+
+### iOS Missing Symbols
+In my project, I had a Rust dependency to Apple's coreaudio API. When I tried to build the Flutter app,
+it would always give me multiple missing symbol errors. I was able to fix this by adding a framework
+to the example app's Runner project. Make sure the framework is not being embeded.
+![image](https://user-images.githubusercontent.com/68450090/203773185-a44b7c83-ed10-4a65-969c-41a7e21f537a.png)
