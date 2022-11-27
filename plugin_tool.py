@@ -95,6 +95,11 @@ def code_gen():
         --c-output ./ios/Classes/bridge_generated.h \
         --c-output ./macos/Classes/bridge_generated.h')
 
+    # Fix the incorrect import in the generated file.
+    # This happens because we are using lib.rs as the entry point.
+    generated_text = open("./rust/src/bridge_generated.rs", "r").read()
+    open("./rust/src/bridge_generated.rs", "w").write(generated_text.replace("use crate::lib::*;", "use crate::*;"))
+
     if "ffi.dart" not in os.listdir("./lib/src"):
         package_name = open("./rust/Cargo.toml", "r").read().split("name = \"")[1].split("\"")[0]
         pascal_case_package_name = package_name.lower().replace("_", " ").title().replace(" ", "")
@@ -163,7 +168,6 @@ def build():
         os.system("cd ..")
         shutil.move(f"./rust/{package_name}.xcframework", "./ios/Frameworks")
 
-    return
 
 if __name__ == "__main__":
     args = parser.parse_args()
