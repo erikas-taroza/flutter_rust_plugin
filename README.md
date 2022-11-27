@@ -74,7 +74,7 @@ s.static_framework = true # This allows us to use the static library we built.
 Objective-C: ``ios/Classes/pkgnamePlugin.m``
 ```objc
 ...
-#import "../Runner/bridge_generated.h"
+#import "../Classes/bridge_generated.h"
 ...
 @implementation pkgnamePlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
