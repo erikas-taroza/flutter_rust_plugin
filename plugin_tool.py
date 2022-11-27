@@ -32,16 +32,14 @@ parser.add_argument(
 def init():
     print("Initializing your project...")
 
-    package_name = ""
-
     # Add dependencies to pubspec.yaml.
     print("Adding dependencies to pubspec.yaml...")
 
     pubspec_text = open("./pubspec.yaml", "r").read()
+    package_name = pubspec_text.split("name: ")[1].split("\n")[0].strip()
+    pascal_case_package_name = package_name.lower().replace("_", " ").title().replace(" ", "")
     
     with open("./pubspec.yaml", "w") as pubspec:
-        package_name = pubspec_text.split("name: ")[1].split("\n")[0].strip()
-
         def add_dependency(dependency:str, version:str = "", dev:bool = False) -> str:
             key = ("dev_" if dev else "") + "dependencies"
             split:list[str] = re.split(rf"\s{key}:\s", pubspec_text)
@@ -86,7 +84,80 @@ def init():
 
     # Initialize the Flutter platform specific things.
     print("Initializing platform specific project files...\n")
-    #TODO
+    
+    # Android
+    gradle_text = open("./android/build.gradle", "r").read()
+    if "main.jniLibs.srcDirs = ['src/main/jniLibs']" not in gradle_text:
+        with open("./android/build.gradle", "w") as gradle:
+            split = gradle_text.split("sourceSets {")
+            split[1] = "\t\tmain.jniLibs.srcDirs = ['src/main/jniLibs']" + split[1]
+            gradle.write(split[0] + "sourceSets {\n" + split[1])
+
+    # Linux
+    linux_cmake_text = open("./linux/CMakeLists.txt", "r").read()
+    if f'set(CRATE_NAME, "{package_name}")' not in linux_cmake_text:
+        with open("./linux/CMakeLists.txt", "w") as cmake:
+            split = linux_cmake_text.split(f"set({package_name}_bundled_libraries")
+            split[0] = split[0] + 'set(CRATE_NAME, "pkgname")\nset(CRATE_NAME ${CRATE_NAME} PARENT_SCOPE)\nadd_subdirectory(${CRATE_NAME})'.replace("pkgname", package_name)
+            split[1] = split[1].replace('""', r'"$<TARGET_FILE:${CRATE_NAME}>"')
+            linux_cmake_text = split[0] + f"\nset({package_name}_bundled_libraries" + split[1]
+            cmake.write(linux_cmake_text)
+
+    if not os.path.exists(f"./linux/{package_name}/CMakeLists.txt"):
+        os.mkdir(f"./linux/{package_name}")
+        with open(f"./linux/{package_name}/CMakeLists.txt", "w") as cmake:
+            cmake.write(
+                'add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)\nset_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")'
+                .replace("pkgname", package_name)
+            )
+
+    # Windows
+    windows_cmake_text = open("./windows/CMakeLists.txt", "r").read()
+    if f'set(CRATE_NAME, "{package_name}")' not in windows_cmake_text:
+        with open("./windows/CMakeLists.txt", "w") as cmake:
+            split = windows_cmake_text.split(f"set({package_name}_bundled_libraries")
+            split[1] = split[1].replace('""', r'"${CMAKE_CURRENT_SOURCE_DIR}/pkgname.dll"')
+            windows_cmake_text = split[0] + f"\nset({package_name}_bundled_libraries" + split[1]
+            cmake.write(windows_cmake_text)
+
+    # macOS
+    mac_podspec = open(f"./macos/{package_name}.podspec", "r").read()
+    if "s.vendored_libraries" not in mac_podspec:
+        with open(f"./macos/{package_name}.podspec", "w") as podspec:
+            # Remove the end keyword ----------v
+            mac_podspec = mac_podspec.strip()[:-3] + "  s.vendored_libraries = 'Libs/**/*'\nend"
+            podspec.write(mac_podspec)
+
+    # iOS
+    ios_podspec = open(f"./ios/{package_name}.podspec", "r").read()
+    if "s.vendored_frameworks" not in ios_podspec:
+        with open(f"./ios/{package_name}.podspec", "w") as podspec:
+            ios_podspec = ios_podspec.strip()[:-3] + "  s.vendored_frameworks = 'Frameworks/**/*.xcframework'\n  s.static_framework = true\nend"
+            podspec.write(ios_podspec)
+
+    # If this is a Swift project
+    if os.path.exists(f"./ios/Classes/Swift{pascal_case_package_name}Plugin.swift"):
+        swift_text = open(f"./ios/Classes/Swift{pascal_case_package_name}Plugin.swift", "r").read()
+        
+        if "dummy_method" not in swift_text:
+            with open(f"./ios/Classes/Swift{pascal_case_package_name}Plugin.swift", "w") as swift:
+                entry_point = "public static func register(with registrar: FlutterPluginRegistrar) {"
+                split = swift_text.split(entry_point)
+                split[1] = "\n\t\tdummy_method_to_enforce_bundling()" + split[1]
+                swift_text = split[0] + entry_point + split[1]
+                swift.write(swift_text)
+    # Obj-C project
+    else:
+        objc_text = open(f"./ios/Classes/{pascal_case_package_name}Plugin.m", "r").read()
+
+        if "dummy_method" not in objc_text:
+            with open(f"./ios/Classes/{pascal_case_package_name}Plugin.m", "w") as objc:
+                objc_text = '#import "../Classes/bridge_generated.h"' + objc_text
+                entry_point = "+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {"
+                split = objc_text.split(entry_point)
+                split[1] = "\n\tdummy_method_to_enforce_bundling();" + split[1]
+                objc_text = split[0] + entry_point + split[1]
+                objc.write(objc_text)
 
 
 def code_gen():
@@ -132,7 +203,10 @@ def build(openssl_path:str = None):
 
         os.system("rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android")
         os.system("cargo install cargo-ndk")
-        os.removedirs("../android/src/main/jniLibs")
+
+        if os.path.exists("../android/src/main/jniLibs"):
+            os.removedirs("../android/src/main/jniLibs")
+
         os.system("cd rust && cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ../android/src/main/jniLibs build --release && cd ..")
 
     if is_linux:
@@ -141,7 +215,10 @@ def build(openssl_path:str = None):
         os.system("rustup target add x86_64-unknown-linux-gnu")
         os.system("cd rust && cargo build --release --target x86_64-unknown-linux-gnu && cd ..")
         os.makedirs(f"./linux/{package_name}", exist_ok=True)
-        os.remove(f"./linux/{package_name}/lib{package_name}.so")
+
+        if os.path.exists(f"./linux/{package_name}/lib{package_name}.so"):
+            os.remove(f"./linux/{package_name}/lib{package_name}.so")
+
         shutil.move(f"./rust/target/x86_64-unknown-linux-gnu/release/lib{package_name}.so", f"./linux/{package_name}")
 
     if is_windows:
@@ -149,7 +226,10 @@ def build(openssl_path:str = None):
 
         os.system("rustup target add x86_64-pc-windows-msvc")
         os.system("cd rust && cargo build --release --target x86_64-pc-windows-msvc && cd ..")
-        os.remove(f"./windows/{package_name}.dll")
+
+        if os.path.exists(f"./windows/{package_name}.dll"):
+            os.remove(f"./windows/{package_name}.dll")
+
         shutil.move(f"./rust/target/x86_64-pc-windows-msvc/release/{package_name}.dll", "./windows")
 
     if is_mac:
@@ -162,7 +242,10 @@ def build(openssl_path:str = None):
         os.system("cargo build --release --target x86_64-apple-darwin")
         os.system(f'lipo "./target/aarch64-apple-darwin/release/lib{package_name}.dylib" "target/x86_64-apple-darwin/release/lib{package_name}.dylib" -output "lib{package_name}.dylib" -create')
         os.system("cd ..")
-        os.remove(f"./macos/Libs/lib{package_name}.dylib")
+
+        if os.path.exists(f"./macos/Libs/lib{package_name}.dylib"):
+            os.remove(f"./macos/Libs/lib{package_name}.dylib")
+
         shutil.move(f"./rust/lib{package_name}.dylib", "./macos/Libs")
 
         # Build for iOS
@@ -180,7 +263,10 @@ def build(openssl_path:str = None):
         os.system(f"xcodebuild -create-xcframework -library ./target/aarch64-apple-ios/release/lib{package_name}.a -library ./lib{package_name}.a -output {package_name}.xcframework")
         os.remove(f"./{package_name}.a")
         os.system("cd ..")
-        os.removedirs(f"./ios/Frameworks/{package_name}.xcframework")
+
+        if os.path.exists(f"./ios/Frameworks/{package_name}.xcframework"):
+            os.removedirs(f"./ios/Frameworks/{package_name}.xcframework")
+
         shutil.move(f"./rust/{package_name}.xcframework", "./ios/Frameworks")
 
 
@@ -189,12 +275,9 @@ if __name__ == "__main__":
 
     if args.init:
         init()
-        print("\n")
 
     if args.code_gen:
         code_gen()
-        print("\n")
 
     if args.build:
         build(args.ios_ssl)
-        print("\n")
