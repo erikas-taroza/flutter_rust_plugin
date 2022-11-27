@@ -60,9 +60,9 @@ s.vendored_libraries = 'Libs/**/*'
 ### Init iOS
 ``ios/pkgname.podspec``:
 ```podspec
-s.vendored_libraries = 'Libs/**/*'
+s.vendored_frameworks = 'Frameworks/**/*.xcframework'
 # Or alternatively:
-# s.vendored_frameworks = 'Frameworks/**/*.xcframework'
+# s.vendored_libraries = 'Libs/**/*'
 s.static_framework = true # This allows us to use the static library we built.
 # I don't know what this does yet.
 # If you have issues, you can try adding this.
