@@ -170,7 +170,10 @@ cargo build --release --target x86_64-apple-ios
 ```
 lipo "target/aarch64-apple-ios-sim/release/libpkgname.a" "target/x86_64-apple-ios/release/libpkgname.a" -output "libpkgname.a" -create
 ```
-Move the export file to ``./ios/Libs``
+```
+xcodebuild -create-xcframework -library ./target/aarch64-apple-ios/release/libpkgname.a -library ./libpkgname.a -output pkgname.xcframework
+```
+Move the framework to ``./ios/Frameworks``
 
 ## Export Windows Libs
 ```
