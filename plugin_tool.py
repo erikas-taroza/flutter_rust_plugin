@@ -23,6 +23,12 @@ parser.add_argument(
     help="Builds the Rust code. This will have to be run on Linux, Windows, and macOS if you want to target all platforms."
 )
 
+parser.add_argument(
+    "--ios-ssl",
+    action="store",
+    help="Used to fix the build for OpenSSL if the vendored feature is being used on aarch64-apple-ios-sim target. Please provide the path to the openssl include directory."
+)
+
 def init():
     print("Initializing your project...")
 
@@ -113,7 +119,7 @@ def code_gen():
         )
 
 
-def build():
+def build(openssl_path:str = None):
     print("Building Rust code...\n")
 
     package_name = open("./rust/Cargo.toml", "r").read().split("name = \"")[1].split("\"")[0]
@@ -126,6 +132,7 @@ def build():
 
         os.system("rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android")
         os.system("cargo install cargo-ndk")
+        os.removedirs("../android/src/main/jniLibs")
         os.system("cd rust && cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ../android/src/main/jniLibs build --release && cd ..")
 
     if is_linux:
@@ -133,13 +140,16 @@ def build():
 
         os.system("rustup target add x86_64-unknown-linux-gnu")
         os.system("cd rust && cargo build --release --target x86_64-unknown-linux-gnu && cd ..")
-        shutil.move(f"./rust/target/x86_64-unknown-linux-gnu/release/{package_name}.so", f"./linux/{package_name}")
+        os.makedirs(f"./linux/{package_name}", exist_ok=True)
+        os.remove(f"./linux/{package_name}/lib{package_name}.so")
+        shutil.move(f"./rust/target/x86_64-unknown-linux-gnu/release/lib{package_name}.so", f"./linux/{package_name}")
 
     if is_windows:
         print("Building Windows libraries...\n")
 
         os.system("rustup target add x86_64-pc-windows-msvc")
         os.system("cd rust && cargo build --release --target x86_64-pc-windows-msvc && cd ..")
+        os.remove(f"./windows/{package_name}.dll")
         shutil.move(f"./rust/target/x86_64-pc-windows-msvc/release/{package_name}.dll", "./windows")
 
     if is_mac:
@@ -152,6 +162,7 @@ def build():
         os.system("cargo build --release --target x86_64-apple-darwin")
         os.system(f'lipo "./target/aarch64-apple-darwin/release/lib{package_name}.dylib" "target/x86_64-apple-darwin/release/lib{package_name}.dylib" -output "lib{package_name}.dylib" -create')
         os.system("cd ..")
+        os.remove(f"./macos/Libs/lib{package_name}.dylib")
         shutil.move(f"./rust/lib{package_name}.dylib", "./macos/Libs")
 
         # Build for iOS
@@ -160,12 +171,16 @@ def build():
         os.system("rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios")
         os.system("cd rust")
         os.system("cargo build --release --target aarch64-apple-ios")
-        os.system("cargo build --release --target aarch64-apple-ios-sim")
+
+        env_vars = f"OPENSSL_STATIC=1 OPENSSL_LIB_DIR=/usr/local/lib OPENSSL_INCLUDE_DIR={openssl_path} OPENSSL_NO_VENDOR=1 " if openssl_path is not None else ""
+        os.system(f"{env_vars}cargo build --release --target aarch64-apple-ios-sim")
+
         os.system("cargo build --release --target x86_64-apple-ios")
         os.system(f'lipo "target/aarch64-apple-ios-sim/release/lib{package_name}.a" "target/x86_64-apple-ios/release/lib{package_name}.a" -output "lib{package_name}.a" -create')
         os.system(f"xcodebuild -create-xcframework -library ./target/aarch64-apple-ios/release/lib{package_name}.a -library ./lib{package_name}.a -output {package_name}.xcframework")
         os.remove(f"./{package_name}.a")
         os.system("cd ..")
+        os.removedirs(f"./ios/Frameworks/{package_name}.xcframework")
         shutil.move(f"./rust/{package_name}.xcframework", "./ios/Frameworks")
 
 
@@ -181,5 +196,5 @@ if __name__ == "__main__":
         print("\n")
 
     if args.build:
-        build()
+        build(args.ios_ssl)
         print("\n")
