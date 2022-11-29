@@ -205,7 +205,7 @@ def build(openssl_path:str = None):
         os.system("cargo install cargo-ndk")
 
         if os.path.exists("./android/src/main/jniLibs"):
-            os.removedirs("./android/src/main/jniLibs")
+            shutil.rmtree("./android/src/main/jniLibs")
 
         os.system("cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./android/src/main/jniLibs build --release --manifest-path ./rust/Cargo.toml")
 
