@@ -143,7 +143,7 @@ def init():
             with open(f"./ios/Classes/Swift{pascal_case_package_name}Plugin.swift", "w") as swift:
                 entry_point = "public static func register(with registrar: FlutterPluginRegistrar) {"
                 split = swift_text.split(entry_point)
-                split[1] = "\n\t\tdummy_method_to_enforce_bundling()" + split[1]
+                split[1] = "\n\t\tprint(dummy_method_to_enforce_bundling())" + split[1]
                 swift_text = split[0] + entry_point + split[1]
                 swift.write(swift_text)
     # Obj-C project
