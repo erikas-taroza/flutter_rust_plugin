@@ -88,7 +88,7 @@ Swift: ``ios/Classes/SwiftpkgnamePlugin.swift``
 ```swift
 public static func register(with registrar: FlutterPluginRegistrar) {
     // ...
-    dummy_method_to_enforce_bundling()
+    print(dummy_method_to_enforce_bundling())
 }
 ```
 
