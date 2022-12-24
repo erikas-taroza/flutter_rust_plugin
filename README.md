@@ -37,18 +37,9 @@ sourceSets {
 ### Init Linux
 ``linux/CMakeLists.txt`` at the bottom:
 ```cmake
-set(CRATE_NAME, "pkgname")
-set(CRATE_NAME ${CRATE_NAME} PARENT_SCOPE)
-add_subdirectory(${CRATE_NAME})
-# ...
 set(pkgname_bundled_libraries
-    "$<TARGET_FILE:${CRATE_NAME}>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so"
     # ...
-```
-``linux/pkgname/CMakeLists.txt``:
-```cmake
-add_library(${CRATE_NAME} SHARED IMPORTED GLOBAL)
-set_property(TARGET ${CRATE_NAME} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")
 ```
 
 ### Init macOS
@@ -137,7 +128,7 @@ rustup target add x86_64-unknown-linux-gnu
 ```
 cargo build --release --target x86_64-unknown-linux-gnu
 ```
-Move the exported file to ``./linux/pkgname``
+Move the exported file to ``./linux``
 
 ## Export macOS Libs
 ```
