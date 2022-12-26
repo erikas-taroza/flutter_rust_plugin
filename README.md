@@ -48,6 +48,16 @@ set(pkgname_bundled_libraries
 s.vendored_libraries = 'Libs/**/*'
 ```
 
+**IMPORTANT:** XCode strips the code from the library so you need to make sure it bundles.
+
+``macos/Classes/SwiftpkgnamePlugin.swift``
+```swift
+public static func register(with registrar: FlutterPluginRegistrar) {
+    // ...
+    let _ = dummy_method_to_enforce_bundling()
+}
+```
+
 ### Init iOS
 ``ios/pkgname.podspec``:
 ```podspec
@@ -79,7 +89,7 @@ Swift: ``ios/Classes/SwiftpkgnamePlugin.swift``
 ```swift
 public static func register(with registrar: FlutterPluginRegistrar) {
     // ...
-    print(dummy_method_to_enforce_bundling())
+    let _ = dummy_method_to_enforce_bundling()
 }
 ```
 
@@ -141,7 +151,7 @@ cargo build --release --target aarch64-apple-darwin
 cargo build --release --target x86_64-apple-darwin
 ```
 ```
-lipo "target/aarch64-apple-darwin/release/libpkgname.dylib" "target/x86_64-apple-darwin/release/libpkgname.dylib" -output "libpkgname.dylib" -create
+lipo "target/aarch64-apple-darwin/release/libpkgname.a" "target/x86_64-apple-darwin/release/libpkgname.a" -output "libpkgname.a" -create
 ```
 Move the exported file to ``./macos/Libs``
 
