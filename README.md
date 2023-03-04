@@ -7,7 +7,7 @@ Update **pubspec.yaml**:
 dependencies:
   # ...
   ffi: ^2.0.1
-  flutter_rust_bridge: ^1.49.0
+  flutter_rust_bridge: ^1.65.0
 # ...
 dev_dependencies:
   # ...
@@ -54,20 +54,18 @@ s.vendored_libraries = 'Libs/**/*'
 ```swift
 public static func register(with registrar: FlutterPluginRegistrar) {
     // ...
-    let _ = dummy_method_to_enforce_bundling()
+    let _ = dummy()
 }
+
+public static func dummy() -> Int64
+{ return dummy_method_to_enforce_bundling() }
 ```
 
 ### Init iOS
 ``ios/pkgname.podspec``:
 ```podspec
 s.vendored_frameworks = 'Frameworks/**/*.xcframework'
-# Or alternatively:
-# s.vendored_libraries = 'Libs/**/*'
 s.static_framework = true # This allows us to use the static library we built.
-# I don't know what this does yet.
-# If you have issues, you can try adding this.
-# s.public_header_files = 'Classes/**/*.h'
 ```
 
 **IMPORTANT:** XCode strips the code from the library so you need to make sure it bundles.
@@ -89,8 +87,11 @@ Swift: ``ios/Classes/SwiftpkgnamePlugin.swift``
 ```swift
 public static func register(with registrar: FlutterPluginRegistrar) {
     // ...
-    let _ = dummy_method_to_enforce_bundling()
+    let _ = dummy()
 }
+
+public static func dummy() -> Int64
+{ return dummy_method_to_enforce_bundling() }
 ```
 
 ### Init Windows
@@ -104,12 +105,12 @@ set(pkgname_bundled_libraries
 ## Flutter->Rust Codegen
 ```
 flutter_rust_bridge_codegen \
-    --rust-input rust/src/api.rs \
-    --dart-output lib/src/bridge_generated.dart \
-    --c-output ios/Classes/bridge_generated.h \
-    --c-output macos/Runner/bridge_generated.h \
-    --dart-decl-output lib/src/bridge_definitions.dart
+    --rust-input ./rust/src/lib.rs \
+    --dart-output ./lib/src/bridge_generated.dart \
+    --dart-decl-output ./lib/src/bridge_definitions.dart \
+    --c-output ./rust/src/bridge_generated.h
 ```
+- Copy and move `./rust/src/bridge_generated.h` to `./macos/Classes` and `./ios/Classes`
 - Fix any errors.
 - Move everything in the folder to a subfolder called ``src``
 - Add [this file](https://raw.githubusercontent.com/Desdaemon/flutter_rust_bridge_template/main/lib/ffi.dart) to lib/src
@@ -189,6 +190,137 @@ Move the exported file to ``./windows``
 - Run code gen above.
 - Export all libs again.
 
+## Publish to pub.dev
+pub.dev does not allow projects to be over 100MB. This means you cannot include the libraries when publishing.
+To fix this, you can use the tutorial [here](https://cjycode.com/flutter_rust_bridge/library/platform_setup.html).
+
+However, I took slightly different steps to make it more simple. In the following code,
+replace the names in the GitHub URLs accordingly.
+
+### Android
+- Add CMakeLists.txt to `./android`.
+- Edit `build.gradle`.
+
+`CMakeLists.txt`:
+```cmake
+cmake_minimum_required(VERSION 3.10)
+
+# Download the binaries from GitHub.
+# The version of the release from GitHub.
+set(Version "1.0.0")
+set(LibPath "${CMAKE_CURRENT_SOURCE_DIR}/src/main/jniLibs")
+
+if(NOT EXISTS "${LibPath}/arm64-v8a/libpkgname.so")
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/android/src/main/jniLibs/arm64-v8a/libpkgname.so?raw=true"
+    "${LibPath}/arm64-v8a/libpkgname.so"
+    TLS_VERIFY ON
+  )
+
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/android/src/main/jniLibs/armeabi-v7a/libpkgname.so?raw=true"
+    "${LibPath}/armeabi-v7a/libpkgname.so"
+    TLS_VERIFY ON
+  )
+
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/android/src/main/jniLibs/x86/libpkgname.so?raw=true"
+    "${LibPath}/x86/libpkgname.so"
+    TLS_VERIFY ON
+  )
+
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/android/src/main/jniLibs/x86_64/libpkgname.so?raw=true"
+    "${LibPath}/x86_64/libpkgname.so"
+    TLS_VERIFY ON
+  )
+endif()
+```
+
+`build.gradle`:
+```gradle
+android {
+    // ...
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+```
+
+### Linux
+Add this to `linux/CMakeLists.txt`:
+```cmake
+# Download the binary from GitHub.
+set(Version "1.0.0")
+set(LibPath "${CMAKE_CURRENT_SOURCE_DIR}/libpkgname.so")
+if(NOT EXISTS ${LibPath})
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/linux/libpkgname.so?raw=true"
+    ${LibPath}
+    TLS_VERIFY ON
+  )
+endif()
+```
+
+### macOS
+Add this to `macos/pkgname.podspec`:
+```podspec
+# Download the binary from GitHub.
+version = "1.0.0"
+lib_url = "https://github.com/username/pkgname/blob/v#{version}/macos/Libs/libpkgname.a?raw=true"
+
+`
+mkdir Libs
+cd Libs
+if [ ! -f libpkgname.a ]
+then
+  curl -L "#{lib_url}" -o libpkgname.a
+fi
+cd ..
+`
+```
+
+### iOS
+Add this to `ios/pkgname.podspec`:
+```podspec
+# Download the binaries from GitHub.
+version = "1.0.0"
+lib_url = "https://github.com/username/pkgname/blob/v#{version}/ios/Frameworks/pkgname.xcframework"
+
+`
+mkdir Frameworks
+cd Frameworks
+if [ ! -d pkgname.xcframework ]
+then
+  mkdir pkgname.xcframework
+  cd pkgname.xcframework
+  mkdir ios-arm64
+  mkdir ios-arm64_x86_64-simulator
+  curl -L "#{lib_url}/Info.plist?raw=true" -o Info.plist
+  curl -L "#{lib_url}/ios-arm64/libpkgname.a?raw=true" -o ios-arm64/libpkgname.a
+  curl -L "#{lib_url}/ios-arm64_x86_64-simulator/libpkgname.a?raw=true" -o ios-arm64_x86_64-simulator/libpkgname.a
+fi
+cd ../..
+`
+```
+
+### Windows
+Add this to `windows/CMakeLists.txt`:
+```cmake
+# Download the binary from GitHub.
+set(Version "1.0.0")
+set(LibPath "${CMAKE_CURRENT_SOURCE_DIR}/pkgname.dll")
+if(NOT EXISTS ${LibPath})
+  file(DOWNLOAD
+    "https://github.com/username/pkgname/blob/v${Version}/windows/pkgname.dll?raw=true"
+    ${LibPath}
+    TLS_VERIFY ON
+  )
+endif()
+```
+
 ## Notes
 Here are issues that I ran into, with solutions that may help you:
 
@@ -212,3 +344,6 @@ In my project, I had a Rust dependency to Apple's coreaudio API. When I tried to
 it would always give me multiple missing symbol errors. I was able to fix this by adding a framework
 to the example app's Runner project. Make sure the framework is not being embeded.
 ![image](https://user-images.githubusercontent.com/68450090/203773185-a44b7c83-ed10-4a65-969c-41a7e21f537a.png)
+
+## Examples
+If you are unsure of how something is implemented, feel free to checkout my project [simple_audio](https://github.com/erikas-taroza/simple_audio).
